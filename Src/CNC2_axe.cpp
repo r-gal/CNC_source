@@ -300,7 +300,7 @@ void Axe_c::MasterSetSpeed(float speed)
     else if(periodInt > 1 ) periodInt--;
   }
   
-  AXE_MASTER_Timer->ARR = periodInt;
+  MASTER_TIMER.Instance->ARR = periodInt;
   //printf("Set speed %d\n",periodInt);
 }
 
@@ -317,7 +317,7 @@ void Axe_c::SyncRun(uint32_t period)
   #else
     HAL_TIM_Base_Start_IT(&SYNC_TIMER);
   #endif
-  TIM_CCxChannelCmd(TIM23, TIM_CHANNEL_2, TIM_CCx_ENABLE);
+  //TIM_CCxChannelCmd(TIM23, TIM_CHANNEL_2, TIM_CCx_ENABLE);
   
   //HAL_TIM_Base_Start_IT(&SYNC_TIMER);
   
@@ -344,7 +344,7 @@ void Axe_c::SyncStop(void)
 
 uint32_t Axe_c::GetSyncTimer(void)
 {
-  return AXE_SYNC_Timer->CNT;
+  return SYNC_TIMER.Instance->CNT;
 }
 
 

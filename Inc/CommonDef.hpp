@@ -1,11 +1,10 @@
 #ifndef COMMON_DEF_H
 #define COMMON_DEF_H
 
-#include "stm32h7xx.h"
-#include "stm32h7xx_hal.h"
+
 
 #include "GeneralConfig.h"
-
+/*
 #define AXE_MASTER_Timer  TIM1  
 #define AXE_SYNC_Timer    TIM23   
 #define AXE_SYNC_IRQ      TIM23_IRQn
@@ -31,7 +30,7 @@
 #define TEST8_PORT GPIOE
 #define TEST8_PIN GPIO_PIN_7
 
-
+*/
 
 
 #ifdef __cplusplus

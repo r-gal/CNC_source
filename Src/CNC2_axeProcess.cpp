@@ -1019,7 +1019,7 @@ void CncAxeProcess_c::RunBase(AXE_et axe, DIR_et dir)
 
 void CncAxeProcess_c::StartMoving(void)
 {
-HAL_GPIO_WritePin(TEST6_PORT,TEST6_PIN,GPIO_PIN_SET);
+HAL_GPIO_WritePin(TEST6_GPIO_Port,TEST6_Pin,GPIO_PIN_SET);
   Segment_c* segPtr = Segment_c::GetFromList();
   if(segPtr != nullptr)
   { 
@@ -1062,7 +1062,7 @@ HAL_GPIO_WritePin(TEST6_PORT,TEST6_PIN,GPIO_PIN_SET);
     Axe_c::MasterRun();
    
   }
-HAL_GPIO_WritePin(TEST6_PORT,TEST6_PIN,GPIO_PIN_RESET);
+HAL_GPIO_WritePin(TEST6_GPIO_Port,TEST6_Pin,GPIO_PIN_RESET);
 }
 
 void CncAxeProcess_c::HandleManualMove( CNC_ManualMove_c* recSig_p)
@@ -1136,10 +1136,10 @@ void CncAxeProcess_c::HandleManualMove( CNC_ManualMove_c* recSig_p)
 
 void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
 {
-  HAL_GPIO_WritePin(TEST4_PORT,TEST4_PIN,GPIO_PIN_SET);
+  HAL_GPIO_WritePin(TEST4_GPIO_Port,TEST4_Pin,GPIO_PIN_SET);
 
   int timers[NO_OF_AXES];
-  int syncTimer = AXE_SYNC_Timer->CNT;
+  int syncTimer = SYNC_TIMER.Instance->CNT;
   timers[0] = AXE_X_TIMER.Instance->CNT;
   timers[1] = AXE_Y_TIMER.Instance->CNT,
   timers[2] = AXE_Z_TIMER.Instance->CNT,
@@ -1282,7 +1282,7 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
       AXE_Z_TIMER.Instance->CNT,
       AXE_A_TIMER.Instance->CNT);
       #endif
-      AXE_SYNC_Timer->CNT = 0;
+      SYNC_TIMER.Instance->CNT = 0;
 
       for(int i=0;i< AXE_NOOF;i++)
       {
@@ -1295,7 +1295,7 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
       CncAxeProcess_c::actSeqNo = -1;
     }
   }
-  HAL_GPIO_WritePin(TEST4_PORT,TEST4_PIN,GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TEST4_GPIO_Port,TEST4_Pin,GPIO_PIN_RESET);
 }
 
 
@@ -1474,8 +1474,8 @@ void SpeedTimerCallback(struct __TIM_HandleTypeDef *htim)
 //HAL_GPIO_WritePin(TEST5_PORT,TEST5_PIN,GPIO_PIN_RESET);
 }
 
-uint32_t TestDirPin[] = {TEST1_PIN,TEST2_PIN,TEST3_PIN};
-GPIO_TypeDef* TestDirPort[] = {TEST1_PORT,TEST2_PORT,TEST3_PORT};  
+uint32_t TestDirPin[] = {TEST1_Pin,TEST2_Pin,TEST3_Pin};
+GPIO_TypeDef* TestDirPort[] = {TEST1_GPIO_Port,TEST2_GPIO_Port,TEST3_GPIO_Port};
 
 void AxeSoftPosCallback(struct __TIM_HandleTypeDef *htim)
 {
