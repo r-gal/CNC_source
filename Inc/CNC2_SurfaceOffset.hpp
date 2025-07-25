@@ -2,7 +2,7 @@
 #define CNC2_SURFACE_OFFSET_H
 
 #include "SignalList.hpp"
-#include "CommonDef.hpp"
+#include "GeneralConfig.h"
 #include "CNC2_dataDef.hpp"
 
 

@@ -124,6 +124,7 @@ uint8_t Axe_c::GetLimState(void)
               }
               break;
             case DIR_UNN:
+            default:
               limState = 0x03; break;
           }        
         }

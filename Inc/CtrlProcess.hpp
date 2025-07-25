@@ -2,7 +2,7 @@
 #define CTRL_PROCESS_H
 
 #include "SignalList.hpp"
-#include "CommonDef.hpp"
+#include "GeneralConfig.h"
 
 #include "Ethernet.hpp"
 //#include "CommandSystem.hpp"

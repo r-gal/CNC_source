@@ -134,7 +134,7 @@ void MoveProcessor_c::InitLine(MoveProcData_st* runData_p, CNC_moveSig_c* moveSi
     float s0,s1,s2,vMaxReal;
     GetRampDistances(&s0,&s1,&s2,&vMaxReal,length,moveSig_p->speedStart,moveSig_p->speedEnd,moveSig_p->maxSpeed,moveSig_p->maxAcceleration);
 
-    if (s1 == 0 & s2 == 0)
+    if ((s1 == 0 )&& (s2 == 0))
     {
         runData_p->stepV0 = (moveSig_p->speedEnd - moveSig_p->speedStart) / runData_p->totalSteps;
         runData_p->stepsV0 = runData_p->totalSteps;
@@ -245,7 +245,7 @@ void MoveProcessor_c::InitArc(MoveProcData_st* runData_p, MoveData_st*  moveData
   float s0,s1,s2,vMaxReal;
   GetRampDistances(&s0,&s1,&s2,&vMaxReal,length,moveData_p->startSpeed,moveData_p->endSpeed,moveData_p->maxSpeed,moveData_p->maxA);
 
-  if (s1 == 0 & s2 == 0)
+  if ((s1 == 0) && (s2 == 0))
   {
       runData_p->stepV0 = (moveData_p->endSpeed - moveData_p->startSpeed) / runData_p->totalSteps;
       runData_p->stepsV0 = runData_p->totalSteps;
@@ -371,7 +371,7 @@ void MoveProcessor_c::InitArcNew(MoveProcData_st* runData_p, CNC_moveSig_c* move
   float s0,s1,s2,vMaxReal;
   GetRampDistances(&s0,&s1,&s2,&vMaxReal,length,moveSig_p->speedStart,moveSig_p->speedEnd,moveSig_p->maxSpeed,moveSig_p->maxAcceleration);
 
-  if (s1 == 0 & s2 == 0)
+  if ((s1 == 0) && (s2 == 0))
   {
       runData_p->stepV0 = (moveSig_p->speedEnd - moveSig_p->speedStart) / runData_p->totalSteps;
       runData_p->stepsV0 = runData_p->totalSteps;

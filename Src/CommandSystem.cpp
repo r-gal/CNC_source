@@ -181,7 +181,7 @@ comResp_et Com_meminfo::Handle(CommandData_st* comData)
   noOfFreeMem = manager->GetUnallocatedHeapSize( );
   noOfFreePrim = manager->GetPrimaryUnallocatedHeapSize( );
   
-  sprintf(strBuf,"NIM_FREE=%d, FREE=%d, FREE_PRIM=%d\n",noOfFreeMin,noOfFreeMem,noOfFreePrim);
+  sprintf(strBuf,"NIM_FREE=%ld, FREE=%ld, FREE_PRIM=%ld\n",noOfFreeMin,noOfFreeMem,noOfFreePrim);
   Print(comData->commandHandler,strBuf);
 
   #if STORE_EXTRA_MEMORY_STATS == 1
@@ -249,7 +249,7 @@ comResp_et Com_memdetinfo::Handle(CommandData_st* comData)
   uint32_t idx;
   bool idxValid = FetchParameterValue(comData,"IDX",&idx,0, 0xFFFF);
 
-  if(minValid & maxValid & idxValid == false)
+  if((minValid & maxValid & idxValid) == false)
   {
     return COMRESP_NOPARAM;
   }
@@ -277,7 +277,7 @@ comResp_et Com_memdetinfo::Handle(CommandData_st* comData)
       const char* taskName = "del";
       if(allocTaskNumber != 0xFFFFFFFF)
       {
-        for(int i=0;i<arraySize;i++)
+        for(uint32_t i=0;i<arraySize;i++)
         {
           if(allocTaskNumber == pxTaskStatusArray[i].xTaskNumber)
           {
@@ -291,7 +291,7 @@ comResp_et Com_memdetinfo::Handle(CommandData_st* comData)
         taskName = "No task";
       }
 
-      sprintf(strBuf,"size=%d,state=%d,id=%d,taskNo=%d,task=%s\n",size,state,id,allocTaskNumber, taskName );
+      sprintf(strBuf,"size=%d,state=%d,id=%d,taskNo=%ld,task=%s\n",size,state,id,allocTaskNumber, taskName );
       Print(comData->commandHandler,strBuf);
 
 
@@ -376,7 +376,7 @@ comResp_et Com_siginfo::Handle(CommandData_st* comData)
       uint16_t actUsage = uxQueueMessagesWaiting(queueHandler);
 
 
-      sprintf(strBuf,"Handler=%2d actFree=%4d actUsage=%4d maxUsage=%4d rejected=%4d sent =%d\n",
+      sprintf(strBuf,"Handler=%2d actFree=%4d actUsage=%4d maxUsage=%4d rejected=%4ld sent =%ld\n",
       handler,
       actFree,
       actUsage,

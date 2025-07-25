@@ -40,7 +40,7 @@
 #define USE_NTP 1
 #define USE_DHCP 0
 
-#define TEST_DEV 0
+#define TEST_DEV 1
 
 #if TEST_DEV == 1
 #define DEFAULT_IP 0xC0A83732 /*192.168.55.50*/

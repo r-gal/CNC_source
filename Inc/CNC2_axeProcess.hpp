@@ -2,7 +2,7 @@
 #define CNC2_AXE_PROCESS_H
 
 #include "SignalList.hpp"
-#include "CommonDef.hpp"
+#include "GeneralConfig.h"
 
 
 #include "RngClass.hpp"

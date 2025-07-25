@@ -16,6 +16,19 @@
 #define RAM_SECTION_NAME ".AXI_RAM1" 
 #define DTCM_SECTION_NAME ".DTCM_RAM1"
 #define RAM2_SECTION_NAME ".RAM1"
+#define configTOTAL_HEAP_SIZE                    ((size_t)48*1024)
+#define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP 1
+#define configTOTAL_CCM_HEAP_SIZE                ((size_t)120*1024)
+#endif
+
+#ifdef STM32F439xx
+#define MEM_USE_DTCM 1 /* used for processes, stacks and memory managers */
+#define MEM_USE_RAM2 0 /* for ethernet */
+#define RAM_SECTION_NAME ".data"
+#define DTCM_SECTION_NAME ".ccmram"
+#define configTOTAL_HEAP_SIZE                    ((size_t)118*1024)
+#define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP 1
+#define configTOTAL_CCM_HEAP_SIZE                ((size_t)58*1024)
 #endif
 
 #ifdef STM32F446xx
@@ -43,10 +56,10 @@
 #define CONF_USE_COMMANDS 1
 #define COMMAND_USE_TELNET 1
 #define COMMAND_USE_UART 0
-#define CONF_USE_WATCHDOG 0
+#define CONF_USE_WATCHDOG 1
 #define CONF_USE_LOGGING 0
 
-#define DEBUG_PROCESS 0
+#define DEBUG_PROCESS 1
 
 #define USE_FLOAT_VECTORS 1
 

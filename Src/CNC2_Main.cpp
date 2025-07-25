@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#pragma fullpath_file  off 
+
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
@@ -16,7 +16,7 @@
 //#include "FTP_ServerProcess.hpp"
 #include "RunTimeStats.hpp"
 #include "TcpProcess.hpp"
-
+#include "GeneralConfig.h"
 #include "CNC2_axeProcess.hpp"
 
 
@@ -24,36 +24,57 @@
 
 #define configTOTAL_RAMD2_SIZE (30*1024)
 
-uint8_t __attribute((section(".AXI_RAM1"))) ucHeap[ configTOTAL_HEAP_SIZE ] __attribute__ ((aligned (4)));
-uint8_t __attribute((section(".DTCM_RAM1"))) ucCCMHeap[ configTOTAL_CCM_HEAP_SIZE ] __attribute__ ((aligned (4)));
-uint8_t __attribute((section(".RAM1"))) ucD2Heap[ configTOTAL_RAMD2_SIZE ] __attribute__ ((aligned (4)));
+uint8_t __attribute((section(RAM_SECTION_NAME))) ucHeap[ configTOTAL_HEAP_SIZE ] __attribute__ ((aligned (4)));
+#if MEM_USE_DTCM == 1
+uint8_t __attribute((section(DTCM_SECTION_NAME))) ucCCMHeap[ configTOTAL_CCM_HEAP_SIZE ] __attribute__ ((aligned (4)));
+#endif
+#if MEM_USE_RAM2 ==1
+uint8_t __attribute((section(RAM2_SECTION_NAME))) ucD2Heap[ configTOTAL_RAMD2_SIZE ] __attribute__ ((aligned (4)));
+#endif
 HeapRegion_t xHeapRegions[] =
   {
   { ucHeap ,			configTOTAL_HEAP_SIZE },
 /*  { (uint8_t*) SDRAM_START ,	SDRAM_SIZE },  DRAM1 */
   { NULL, 0 }
   };
+#if MEM_USE_DTCM == 1
 HeapRegion_t xCCMHeapRegions[] =
   {
   { ucCCMHeap ,			configTOTAL_CCM_HEAP_SIZE },
 /*  { (uint8_t*) SDRAM_START ,	SDRAM_SIZE },  DRAM1 */
   { NULL, 0 }
   };
+#endif
+#if MEM_USE_RAM2 == 1
 HeapRegion_t xRAMD2HeapRegions[] =
   {
   { ucD2Heap ,			configTOTAL_RAMD2_SIZE },
 /*  { (uint8_t*) SDRAM_START ,	SDRAM_SIZE },  DRAM1 */
   { NULL, 0 }
   };
+#endif
 
 uint16_t baseManagerSizes[] = {32,64,128,340,540,1600,4096,16384};
+#if MEM_USE_DTCM == 1
 uint16_t ccmManagerSizes[] = {512,1024,2048,4096,8192,16384};
+#endif
+#if MEM_USE_RAM2 == 1
 uint16_t ramD2ManagerSizes[] = {256,1600};
+#endif
 
-HeapManager_c __attribute((section(".DTCM"))) baseManager(8,baseManagerSizes,0);
-HeapManager_c __attribute((section(".DTCM"))) ccmManager(6,ccmManagerSizes,1);
-HeapManager_c __attribute((section(".DTCM"))) ramD2Manager(2,ramD2ManagerSizes,2);
-
+#if MEM_USE_DTCM == 1
+HeapManager_c __attribute((section(DTCM_SECTION_NAME))) baseManager(8,baseManagerSizes,0);
+#if MEM_USE_DTCM == 1
+HeapManager_c __attribute((section(DTCM_SECTION_NAME))) ccmManager(6,ccmManagerSizes,1);
+#endif
+#if MEM_USE_RAM2 == 1
+HeapManager_c __attribute((section(DTCM_SECTION_NAME))) ramD2Manager(2,ramD2ManagerSizes,2);
+#endif
+#else
+#if MEM_USE_DTCM == 1
+HeapManager_c __attribute((section(RAM_SECTION_NAME))) baseManager(8,baseManagerSizes,0);
+#endif
+#endif
 
 #ifdef __cplusplus
  extern "C" {
@@ -95,14 +116,18 @@ void operator delete(void* ptr) {
   {
     baseManager.Free(ptr);
   }
+#if MEM_USE_DTCM == 1
   else if(idx == 1)
   {
     ccmManager.Free(ptr);
   }
+#endif
+#if MEM_USE_RAM2 == 1
   else if(idx == 2)
   {
     ramD2Manager.Free(ptr);
   }
+#endif
 
   //baseManager.Free(ptr);
 }
@@ -117,14 +142,18 @@ void operator delete[](void* ptr) {
   {
     baseManager.Free(ptr);
   }
+#if MEM_USE_DTCM == 1
   else if(idx == 1)
   {
     ccmManager.Free(ptr);
   }
+#endif
+#if MEM_USE_RAM2 == 1
   else if(idx == 2)
   {
     ramD2Manager.Free(ptr);
   }
+#endif
   //baseManager.Free(ptr);
 }
 
@@ -188,13 +217,16 @@ static void prvSetupHeap( void )
 {
     //vPortDefineHeapRegions( xHeapRegions );
   baseManager.DefineHeapRegions(xHeapRegions);
-
+#if MEM_USE_DTCM == 1
   //vPortDefineHeapRegions( xHeapRegions );
   ccmManager.DefineHeapRegions(xCCMHeapRegions);
-
+#endif
+#if MEM_USE_RAM2 == 1
   ramD2Manager.DefineHeapRegions(xRAMD2HeapRegions);
-
   ramD2Manager.allowNullResult = true;
+#endif
+
+
 }
 
 

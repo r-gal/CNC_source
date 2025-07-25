@@ -2,7 +2,7 @@
 #define CNC2_AXE_H
 
 #include "SignalList.hpp"
-#include "CommonDef.hpp"
+#include "GeneralConfig.h"
 #include "CNC2_dataDef.hpp"
 
 class Axe_c

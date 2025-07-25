@@ -47,7 +47,7 @@ int segmentCnt = 0;
 watchdogSig_c wtdSig;
 
 #if CONF_USE_WATCHDOG == 1
-extern IWDG_HandleTypeDef hiwdg1;
+extern IWDG_HandleTypeDef HIWDG_;
 #endif
 
 #if TEST_SEGLIST == 1
@@ -132,9 +132,9 @@ void PrintDebugData(void)
 
 void vFunctionAxeTimerCallback( TimerHandle_t xTimer )
 {
-#if USE_WATCHDOG == 1
+#if CONF_USE_WATCHDOG == 1
   //wtdSig.Send();
-  __HAL_IWDG_RELOAD_COUNTER(&hiwdg1);
+  __HAL_IWDG_RELOAD_COUNTER(&HIWDG_);
   #endif
 
 }
@@ -244,8 +244,8 @@ void CncAxeProcess_c::main(void)
    
       case SIGNO_WATCHDOG_RESET:
         {
-         #if USE_WATCHDOG == 1
-          //__HAL_IWDG_RELOAD_COUNTER(&hiwdg1);
+         #if CONF_USE_WATCHDOG == 1
+          __HAL_IWDG_RELOAD_COUNTER(&HIWDG_);
          #endif
           releaseSig = false;
         }
@@ -254,7 +254,7 @@ void CncAxeProcess_c::main(void)
       case SIGNO_CNC_MOVE:
         {
           CNC_moveSig_c* sig_p = (CNC_moveSig_c*)recSig_p;
-          uint32_t statusBitMap = CncStatus_c::GetStatus();
+
           ignoreLimiters = sig_p->ignoreLimiters;
           if(CncStatus_c::StatusOk() == true)
           {
@@ -475,14 +475,13 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
 
 
   }
-  int segCnt = 0;
 
 
   SEGMENT_REULT_et segResult = MORE_SEGMENTS;
   while((segResult == MORE_SEGMENTS) || (segResult == IGNORE_SEGMENT))
   {
-    #if USE_WATCHDOG == 1
-    //__HAL_IWDG_RELOAD_COUNTER(&hiwdg1);
+    #if CONF_USE_WATCHDOG == 1
+    //__HAL_IWDG_RELOAD_COUNTER(&HIWDG_);
     #endif
     if(forceBreak)
     {
@@ -632,7 +631,7 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
 
 
     #if CONF_USE_WATCHDOG == 1
-    __HAL_IWDG_RELOAD_COUNTER(&hiwdg1);
+    __HAL_IWDG_RELOAD_COUNTER(&HIWDG_);
     #endif
 /*
     if(segCnt <= 0)
@@ -1202,8 +1201,8 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
         printf("next seg error, act speed=%f, VE=%f, VS=%f\n",axes_p->runData.actSpeed,axes_p->runData.actSegment_p->vE,segPtr->v0);
 
         Segment_c* prevSegPtr = axes_p->runData.actSegment_p;
-        printf("prevSeg: (%d,%d,%d,%d) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
-        printf("prevSeg: (%d,%d,%d,%d) V0=%f VE=%f VM=%f\n",segPtr->pulses[0],segPtr->pulses[1],segPtr->pulses[2],segPtr->pulses[3],segPtr->v0,segPtr->vE,segPtr->vM);
+        printf("prevSeg: (%l,%l,%l,%l) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
+        printf("prevSeg: (%l,%l,%l,%l) V0=%f VE=%f VM=%f\n",segPtr->pulses[0],segPtr->pulses[1],segPtr->pulses[2],segPtr->pulses[3],segPtr->v0,segPtr->vE,segPtr->vM);
         //CncAxeProcess_c::PrintSpeedDebug();
       }
       #endif
@@ -1211,8 +1210,8 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
       if(printDebug)
       {
         Segment_c* prevSegPtr = axes_p->runData.actSegment_p;
-        printf("prev Seg: (%d,%d,%d,%d) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
-        printf("act  Seg: (%d,%d,%d,%d) V0=%f VE=%f VM=%f\n",segPtr->pulses[0],segPtr->pulses[1],segPtr->pulses[2],segPtr->pulses[3],segPtr->v0,segPtr->vE,segPtr->vM);
+        printf("prev Seg: (%ld,%ld,%ld,%ld) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
+        printf("act  Seg: (%ld,%ld,%ld,%ld) V0=%f VE=%f VM=%f\n",segPtr->pulses[0],segPtr->pulses[1],segPtr->pulses[2],segPtr->pulses[3],segPtr->v0,segPtr->vE,segPtr->vM);
         //CncAxeProcess_c::PrintSpeedDebug();
 
       }
@@ -1319,7 +1318,7 @@ void CalibTimerCallback(struct __TIM_HandleTypeDef *htim)
 void SpeedTimerCallback(struct __TIM_HandleTypeDef *htim)
 {
 //HAL_GPIO_WritePin(TEST5_PORT,TEST5_PIN,GPIO_PIN_SET);
-  int seqNo = -1;
+
 
   if(axes_p->runData.regularMove == MOVETYPE_REGULAR)
   {
@@ -1415,7 +1414,7 @@ void SpeedTimerCallback(struct __TIM_HandleTypeDef *htim)
     {
       //CncAxeProcess_c::DebugSpeed(newSpeed,event);
     }
-    seqNo = segment_p->seqNo;
+
   //printf("\n");
   }
   else if((axes_p->runData.regularMove == MOVETYPE_PROBE) || (axes_p->runData.regularMove ==MOVETYPE_MANUAL) || (axes_p->runData.regularMove ==MOVETYPE_BASE))
@@ -1461,10 +1460,6 @@ void SpeedTimerCallback(struct __TIM_HandleTypeDef *htim)
 
     }
 
-    if(axes_p->runData.regularMove ==MOVETYPE_BASE)
-    {
-      seqNo = -2;
-    }
 
 
 
@@ -1623,7 +1618,6 @@ void CncAxes_c::CalcSegment(Segment_c* segment_p,iVector3D* vector_p, int aMove,
   uint32_t pulses[AXE_NOOF];
   uint32_t period[AXE_NOOF];
   uint32_t prescaler[AXE_NOOF];
-  bool enabled[AXE_NOOF];
 
   int vectorArr[AXE_NOOF];
 
@@ -1660,12 +1654,12 @@ void CncAxes_c::CalcSegment(Segment_c* segment_p,iVector3D* vector_p, int aMove,
   {
     if(pulses[i] == 0)
     {
-      enabled[i] = false;
+
       pulses[i] = 2;
     }
     else
     {
-      enabled[i] = true;
+
     }
   }
 
@@ -1678,11 +1672,11 @@ void CncAxes_c::CalcSegment(Segment_c* segment_p,iVector3D* vector_p, int aMove,
   }
 
   uint32_t totalCycles = PULSE_MULTIPLIER * length ;
-
+#if TEST_AXE > 0
   uint32_t largestPeriod = 0;
 
   uint32_t periodTest[AXE_NOOF];
-
+#endif
   int largestDivider = 0;
 
   /* Calc period and prescaler */
@@ -1710,7 +1704,6 @@ void CncAxes_c::CalcSegment(Segment_c* segment_p,iVector3D* vector_p, int aMove,
   int k = largestDivider;
 
   uint32_t totalCyclesTmp = totalCycles;
-  uint32_t totalCyclesTest = totalCycles;
 
   if(k>0)
   {
