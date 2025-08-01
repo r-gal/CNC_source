@@ -75,6 +75,7 @@
 #define TEST_AXE_PIPELINE 0
 #define TEST_AXE_SPEED 0
 #define TEST_AXE_DET 0
+#define TEST_SURFACE_OFFSET 0
 #define NO_OF_AXES 4
 
 #define USE_AUTOBASE 0

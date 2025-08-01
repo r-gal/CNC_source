@@ -1674,7 +1674,7 @@ void CncAxes_c::CalcSegment(Segment_c* segment_p,iVector3D* vector_p, int aMove,
   uint32_t totalCycles = PULSE_MULTIPLIER * length ;
 #if TEST_AXE > 0
   uint32_t largestPeriod = 0;
-
+  uint32_t totalCyclesTest = totalCycles;
   uint32_t periodTest[AXE_NOOF];
 #endif
   int largestDivider = 0;

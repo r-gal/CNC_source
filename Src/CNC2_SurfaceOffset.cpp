@@ -12,6 +12,8 @@
 
 #include "CNC2_SurfaceOffset.hpp"
 
+CommandSurfaceOffset_c commandSurfaceOffset;
+SurfaceOffset_c* SurfaceOffset_c::ownRef =  nullptr;
 
 void SurfaceOffset_c::Clear(void)
 {
@@ -33,10 +35,12 @@ SurfaceOffset_c::SurfaceOffset_c()
 {
   array = nullptr;
   Clear();    
+  ownRef = this;
 }
 
 void SurfaceOffset_c::Init(int xSize, int ySize, int xStep, int yStep, int xStart, int yStart)
 {
+  Clear();
   this->xSize = xSize;
   this->ySize = ySize;
   this->xStep = xStep;
@@ -59,13 +63,13 @@ void SurfaceOffset_c::SetProbe(int x, int y, int val)
 {
   if((x< xSize) && (y < ySize) && (array != nullptr))
   {
-    array[x*xSize + y] = val;
+    array[x + y*xSize] = val;
   }
 }
 
 int SurfaceOffset_c::GetPoint(int x, int y)
 {
-  return array[x*xSize + y];
+  return array[x + y*xSize];
 
 }
 
@@ -84,9 +88,10 @@ void  SurfaceOffset_c::Deactivate(void)
 
 int SurfaceOffset_c::AddSurfaceOffset(int x ,int y)
 {
+  int val = 0;
   if(active)
   {
-    if((x > xStart) && (y > yStart))
+    if((x >= xStart) && (y >= yStart))
     {
       int xTmp = x - xStart;
       int yTmp = y - yStart;
@@ -113,13 +118,15 @@ int SurfaceOffset_c::AddSurfaceOffset(int x ,int y)
 
         int av = av1 * yMod2 + av2 * yMod;
 
-        int val = av /  yStep;
-
-        return val;
+        val = av /  yStep;
       }
     }
+    #if TEST_SURFACE_OFFSET == 1
+      printf("SOFF: x=%d, y=%d, off=%d\n",x,y,val);
+
+    #endif
   }
-  return 0;
+  return val;
 }
 
 int SurfaceOffset_c::GetMaxSegLength(void)
@@ -141,4 +148,60 @@ int SurfaceOffset_c::GetMaxSegLength(void)
   {
     return 0;
   }
+}
+
+
+/************************************************************/
+
+
+comResp_et Com_surfoffset::Handle(CommandData_st* comData)
+{
+  char* strBuf = new char[256];
+
+  int xProbes = SurfaceOffset_c::ownRef->GetProbesX();
+  int yProbes = SurfaceOffset_c::ownRef->GetProbesY();
+
+
+  sprintf(strBuf,"State = %d, stepX = %d, stepY = %d, probesX=%d, probesY=%d\n", 
+  SurfaceOffset_c::ownRef->IsActive(),
+  SurfaceOffset_c::ownRef->GetStepX(),
+  SurfaceOffset_c::ownRef->GetStepY(),
+  xProbes,
+  yProbes);
+  Print(comData->commandHandler,strBuf);
+
+  if((xProbes > 0) && (yProbes > 0))
+  {
+    sprintf(strBuf,"      ");
+    for(int x= 0;x< xProbes;x++)
+    {
+      sprintf(strBuf+ (8*x) + 6,"|X:%2d   ",x);
+    }
+    strcat(strBuf,"|\n");
+    Print(comData->commandHandler,strBuf);
+
+    for(int i= 0;i< xProbes*8 + 6;i++)
+    {
+      strBuf[i] = '-';
+    }
+    strBuf[xProbes*8 + 6] = '\n';
+    strBuf[xProbes*8 + 7] = 0;
+     Print(comData->commandHandler,strBuf);
+
+    for(int y= 0;y< yProbes;y++)
+    {
+      sprintf(strBuf," Y:%2d   ",y);
+      for(int x= 0;x< xProbes;x++)
+      {
+        sprintf(strBuf+ (8*x)+6,"|%6d ",SurfaceOffset_c::ownRef->GetPoint(x,y));
+      }
+      strcat(strBuf,"|\n");
+      Print(comData->commandHandler,strBuf);
+    }
+
+  }
+
+
+  delete[] strBuf;
+  return COMRESP_OK;
 }

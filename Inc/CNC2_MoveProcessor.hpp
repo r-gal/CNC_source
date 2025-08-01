@@ -18,6 +18,7 @@ class MoveProcessor_c
   static void GetRampDistances(float* s0,float* s1, float* s2, float* vMaxReal,     float length, float v0, float vE, float Vmax, float aMax);
 
   static int position[NO_OF_AXES];
+  static int addedOffset;
 
 
 public:

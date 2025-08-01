@@ -15,6 +15,7 @@
 
 
 int MoveProcessor_c::position[NO_OF_AXES] = {0};
+int MoveProcessor_c::addedOffset = 0;
 
 
 
@@ -71,6 +72,7 @@ void MoveProcessor_c::InitDwel(MoveProcData_st* runData_p, MoveData_st*  moveSig
 
 void MoveProcessor_c::InitLine(MoveProcData_st* runData_p, CNC_moveSig_c* moveSig_p, int maxSegLength)
 {
+
   float minSpeed = Axe_c::GetMinSpeed();
 
   runData_p->startSpeed = moveSig_p->speedStart;
@@ -423,7 +425,7 @@ int MoveProcessor_c::Round(int val, int s)
 SEGMENT_REULT_et MoveProcessor_c::GetLineSimpleMove(SimpleMove_st* sMove_p, MoveProcData_st* runData_p, int* scales,SurfaceOffset_c* surfaceOffset)
 {
 
-
+  int endPos[NO_OF_AXES];
 
   bool lastSeg = true;
 
@@ -459,45 +461,63 @@ SEGMENT_REULT_et MoveProcessor_c::GetLineSimpleMove(SimpleMove_st* sMove_p, Move
 
     if(lastSeg == true)
     {
-      sMove_p->x = runData_p->rEndPoint.x - position[0];
-      sMove_p->y = runData_p->rEndPoint.y - position[1];
-      sMove_p->z = runData_p->rEndPoint.z - position[2];
-      sMove_p->a = runData_p->endApos     - position[3];
+      endPos[0] = runData_p->rEndPoint.x;
+      endPos[1] = runData_p->rEndPoint.y;
+      endPos[2] = runData_p->rEndPoint.z;
+      endPos[3] = runData_p->endApos;
       sMove_p->endSpeed = runData_p->endSpeed;
     }
     else
     {
-      sMove_p->x = runData_p->step[0];
-      sMove_p->y = runData_p->step[1];
-      sMove_p->z = runData_p->step[2];
-      sMove_p->a = runData_p->step[3];
+      for(int idx=0;idx<NO_OF_AXES;idx++)
+      {
+        endPos[idx] = position[idx] + runData_p->step[idx];
+      }
     }
     runData_p->progress++;
   }
   else
   {
-    sMove_p->x = runData_p->rEndPoint.x - position[0];
-    sMove_p->y = runData_p->rEndPoint.y - position[1];
-    sMove_p->z = runData_p->rEndPoint.z - position[2];
-    sMove_p->a = runData_p->endApos     - position[3];
-
+    endPos[0] = runData_p->rEndPoint.x;
+    endPos[1] = runData_p->rEndPoint.y;
+    endPos[2] = runData_p->rEndPoint.z;
+    endPos[3] = runData_p->endApos;
 
     sMove_p->startSpeed = runData_p->startSpeed;
     sMove_p->endSpeed = runData_p->endSpeed;
   }
 
 
-  /* round move data to possible value */
+  /* add surface offset */
 
+  int zOffset = surfaceOffset->AddSurfaceOffset(endPos[0],endPos[1]);
+  zOffset = Round(zOffset,scales[2]);  
 
-  int zOffset = surfaceOffset->AddSurfaceOffset(position[0]+sMove_p->x, position[1]+sMove_p->y);
-  sMove_p->z += zOffset;
+  //endPos[2] += zOffset;
+
+  sMove_p->x = endPos[0] - position[0];
+  sMove_p->y = endPos[1] - position[1];
+  sMove_p->z = endPos[2] - position[2];
+  sMove_p->a = endPos[3] - position[3];
+
+/* round move data to possible value */
+  #if TEST_SURFACE_OFFSET == 1
+    printf("Move L (%d,%d,%d) -> (%d,%d,%d) \n",
+    position[0],
+    position[1],
+    position[2],
+    endPos[0],
+    endPos[1],
+    endPos[2]);
+
+    printf("offOld=%d, offNew = %d\n",addedOffset,zOffset);
+
+  #endif
 
   sMove_p->x = Round(sMove_p->x,scales[0]);
   sMove_p->y = Round(sMove_p->y,scales[1]);
   sMove_p->z = Round(sMove_p->z,scales[2]);  
   sMove_p->a = Round(sMove_p->a,scales[3]);
-
 
 
   if((sMove_p->x == 0) && (sMove_p->y == 0)  && (sMove_p->z == 0)  && (sMove_p->a == 0))
@@ -510,7 +530,15 @@ SEGMENT_REULT_et MoveProcessor_c::GetLineSimpleMove(SimpleMove_st* sMove_p, Move
   position[1] += sMove_p->y;
   position[2] += sMove_p->z;
   position[3] += sMove_p->a;
+
+  sMove_p->z -= addedOffset;
+  sMove_p->z += zOffset;
+  addedOffset = zOffset;
   
+
+  #if TEST_SURFACE_OFFSET == 1
+    printf("move = (%d,%d,%d)\n",sMove_p->x,sMove_p->y,sMove_p->z);
+  #endif
 
  #if TEST_AXE_PIPELINE == 1
   printf("Seg L: (%d,%d,%d,%d) ",sMove_p->x,sMove_p->y,sMove_p->z,sMove_p->a);
@@ -649,14 +677,14 @@ SEGMENT_REULT_et MoveProcessor_c::GetArcNewSimpleMove(SimpleMove_st* sMove_p, Mo
   }
 
 
+  int endPos[NO_OF_AXES];
 
   iVector3D move;
   if(result == LAST_SEGMENT)
   {
-
-    move.x = runData_p->endPoint.x - position[0];
-    move.y = runData_p->endPoint.y - position[1];
-    move.z = runData_p->endPoint.z - position[2];
+    endPos[0] = runData_p->endPoint.x;
+    endPos[1] = runData_p->endPoint.y;
+    endPos[2] = runData_p->endPoint.z;
   }
   else
   {
@@ -671,14 +699,34 @@ SEGMENT_REULT_et MoveProcessor_c::GetArcNewSimpleMove(SimpleMove_st* sMove_p, Mo
 
     iPoint3D newPoint( (int)(pt.X*1000) ,(int)(pt.Y*1000),(int)(pt.Z*1000));
 
-
-    move.x = newPoint.x - position[0];
-    move.y = newPoint.y - position[1];
-    move.z = newPoint.z - position[2];
+    endPos[0] = newPoint.x;
+    endPos[1] = newPoint.y;
+    endPos[2] = newPoint.z;
   }
 
-  int zOffset = surfaceOffset->AddSurfaceOffset(position[0]+sMove_p->x, position[1]+sMove_p->y);
-  sMove_p->z += zOffset;
+
+
+  /* add surface offset */
+
+  int zOffset = surfaceOffset->AddSurfaceOffset(endPos[0], endPos[1]);
+  zOffset = Round(zOffset,scales[2]);  
+
+
+  #if TEST_SURFACE_OFFSET == 1
+    printf("Move A (%d,%d,%d) -> (%d,%d,%d) \n",
+    position[0],
+    position[1],
+    position[2],
+    endPos[0],
+    endPos[1],
+    endPos[2]);
+
+    printf("offOld=%d, offNew = %d\n",addedOffset,zOffset);
+  #endif
+
+  move.x = endPos[0] - position[0];
+  move.y = endPos[1] - position[1];
+  move.z = endPos[2] - position[2];
 
   move.x = Round(move.x,scales[0]);
   move.y = Round(move.y,scales[1]);
@@ -698,6 +746,14 @@ SEGMENT_REULT_et MoveProcessor_c::GetArcNewSimpleMove(SimpleMove_st* sMove_p, Mo
   sMove_p->y = move.y;
   sMove_p->z = move.z;
   sMove_p->a = 0;
+
+  sMove_p->z -= addedOffset;
+  sMove_p->z += zOffset;
+  addedOffset = zOffset;
+
+  #if TEST_SURFACE_OFFSET == 1
+    printf("move = (%d,%d,%d)\n",sMove_p->x,sMove_p->y,sMove_p->z);
+  #endif
 
   //printf("Seg A: (%d,%d,%d,%d)\n",sMove_p->x,sMove_p->y,sMove_p->z,sMove_p->a);
 

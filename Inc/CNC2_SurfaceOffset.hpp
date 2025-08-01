@@ -5,7 +5,7 @@
 #include "GeneralConfig.h"
 #include "CNC2_dataDef.hpp"
 
-
+#include "CommandHandler.hpp"
 
 class SurfaceOffset_c
 {
@@ -20,9 +20,19 @@ class SurfaceOffset_c
 
   int* array;
 
-  int GetPoint(int x, int y);
+  
 
   public:
+
+  int GetPoint(int x, int y);
+
+  bool IsActive(void) { return active; }
+  int GetStepX(void) { return xStep; }
+  int GetStepY(void) { return yStep; }
+  int GetProbesX(void) { return xSize; }
+  int GetProbesY(void) { return ySize; }
+
+  static SurfaceOffset_c* ownRef; /* for printouts only */
 
   void Clear(void);
   SurfaceOffset_c();
@@ -34,6 +44,26 @@ class SurfaceOffset_c
   int AddSurfaceOffset(int x, int y);
 
   int GetMaxSegLength(void);
+
+};
+
+
+class Com_surfoffset : public Command_c
+{
+  public:
+  char* GetComString(void) { return (char*)"surfoffset"; }
+  void PrintHelp(CommandHandler_c* commandHandler ){}
+  comResp_et Handle(CommandData_st* comData_);
+};
+
+class CommandSurfaceOffset_c :public CommandGroup_c
+{
+
+  Com_surfoffset surfoffset;
+
+  public:
+
+
 
 };
 
