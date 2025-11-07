@@ -45,6 +45,10 @@ class Segment_c
 
   static void InitList(void);
 
+  static int GetLength(void);
+  static int GetEmptyLength(void);
+  static int GetLengthISR(void);
+  static int GetEmptyLengthISR(void);
  
   Segment_c(void)
   {

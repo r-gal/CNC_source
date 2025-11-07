@@ -201,12 +201,12 @@ int ApplMain(void)
   new RunTime_c ;
 
   new CtrlProcess_c(2048,tskIDLE_PRIORITY+4,64,SignalLayer_c::HANDLE_CTRL);
-  new TcpProcess_c(2048,tskIDLE_PRIORITY+5,64,SignalLayer_c::HANDLE_TCP);
+  new TcpProcess_c(2048,tskIDLE_PRIORITY+4,64,SignalLayer_c::HANDLE_TCP);
  // new HttpProcess_c(512,tskIDLE_PRIORITY+3,64,SignalLayer_c::HANDLE_HTTP);
   new TelnetProcess_c(512,tskIDLE_PRIORITY+3,64,SignalLayer_c::HANDLE_TELNET);
  // new FtpProcess_c(1024,tskIDLE_PRIORITY+3,64,SignalLayer_c::HANDLE_FTP);
 
-  new CncAxeProcess_c(2048,tskIDLE_PRIORITY+4,160,SignalLayer_c::HANDLE_AXE);
+  new CncAxeProcess_c(2048,tskIDLE_PRIORITY+5,160,SignalLayer_c::HANDLE_AXE);
 
   vTaskStartScheduler();
 

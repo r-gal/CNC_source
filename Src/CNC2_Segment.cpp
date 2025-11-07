@@ -241,3 +241,20 @@ Segment_c* Segment_c::ReadFirstISR(void)
   return first;
   #endif
 }
+
+int Segment_c::GetLength(void)
+{
+  return uxQueueMessagesWaiting(queue);
+}
+int Segment_c::GetEmptyLength(void)
+{
+  return uxQueueMessagesWaiting(emptyQueue);
+}
+int Segment_c::GetLengthISR(void)
+{
+  return uxQueueMessagesWaitingFromISR(queue);
+}
+int Segment_c::GetEmptyLengthISR(void)
+{
+  return uxQueueMessagesWaitingFromISR(emptyQueue);
+}

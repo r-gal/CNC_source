@@ -71,6 +71,7 @@
 
 #define TEST_SYNC_TIMER 0 /* assume that sync timer is TIM23 */
 #define TEST_SEGLIST 0
+#define DEBUG_FLOW  0
 #define TEST_AXE 0
 #define TEST_AXE_PIPELINE 0
 #define TEST_AXE_SPEED 0
@@ -115,7 +116,7 @@ void DeleteTaskWrapper(void* task);
 #endif
 
 #if CONF_USE_BOOTUNIT == 0
-#define VERSION_NAME "v2.1"
+#define VERSION_NAME "v2.2"
 #endif
 
 #endif

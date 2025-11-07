@@ -54,6 +54,19 @@ enum RunState_et
   RUN_STOPPING
 };
 
+enum EVENT_et
+{
+  EVENT_NONE,
+  EVENT_RECMOVE,
+  EVENT_DELAYED,
+  EVENT_SEGADD,
+  EVENT_EXEC,
+  EVENT_END,
+  EVENT_NOOF
+
+
+};
+
 struct RunData_st
 {
 
@@ -189,6 +202,8 @@ class CncAxeProcess_c : public process_c
 
   static int pos[NO_OF_AXES];
   static int actSeqNo;
+  static int recSeqNo;
+  static int procSeqNo;
 
 
   static bool forceBreak;

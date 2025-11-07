@@ -77,6 +77,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;
         sig_p->seqNo = frame_p->data[0];
         lastReceivedSeqNo = frame_p->data[0];
+        CncAxeProcess_c::recSeqNo = lastReceivedSeqNo;
 
         sig_p->speedStart = ((float)frame_p->data[2])/1000 ;
         sig_p->speedEnd = ((float)frame_p->data[3])/1000 ;
@@ -105,6 +106,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
       {
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;        
         lastReceivedSeqNo = frame_p->data[0];
+        CncAxeProcess_c::recSeqNo = lastReceivedSeqNo;
 
         sig_p->speedStart = ((float)frame_p->data[2])/1000 ;
         sig_p->speedEnd = ((float)frame_p->data[3])/1000 ;
@@ -141,6 +143,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;
         sig_p->seqNo = frame_p->data[0];
         lastReceivedSeqNo = frame_p->data[0];
+        CncAxeProcess_c::recSeqNo = lastReceivedSeqNo;
 
         sig_p->speedStart = ((float)frame_p->data[2])/1000 ;
         sig_p->speedEnd = ((float)frame_p->data[3])/1000 ;
@@ -178,6 +181,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
     case OC_RUN_AUTOBASE :
       {
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;
+        CncAxeProcess_c::recSeqNo = sig_p->seqNo;
         sig_p->x = frame_p->data[2];
         sig_p->y = frame_p->data[3];
         sig_p->z = frame_p->data[4];
@@ -208,6 +212,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;
         sig_p->seqNo = frame_p->data[0];
         sig_p->delay = frame_p->data[2];
+        CncAxeProcess_c::recSeqNo = sig_p->seqNo;
 
         sig_p->moveType = MOVE_DELAY;
 
@@ -232,6 +237,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
       {
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;
         sig_p->seqNo = frame_p->data[0];
+        CncAxeProcess_c::recSeqNo = sig_p->seqNo;
         sig_p->axe = frame_p->data[2];
         sig_p->length = frame_p->data[3];
         sig_p->mode = frame_p->data[4];
@@ -298,6 +304,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
         CNC_moveSig_c* sig_p = new CNC_moveSig_c;
         sig_p->seqNo = frame_p->data[0];
         sig_p->spindleSpeed = frame_p->data[2];
+        CncAxeProcess_c::recSeqNo = sig_p->seqNo;
 
         sig_p->moveType = MOVE_SET_SPINDLE;
 

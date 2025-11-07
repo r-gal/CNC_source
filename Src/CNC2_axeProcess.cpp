@@ -32,9 +32,64 @@ uint32_t CncStatus_c::status = STATUS_BIT_NOT_INIT | STATUS_BIT_NOT_BASED;
 uint32_t CncStatus_c::status = STATUS_BIT_NOT_INIT ;
 #endif
 
+#if DEBUG_FLOW == 1
+  #define DF_LENGTH  128
+  int df_idx = 0;
+  uint8_t df_event[DF_LENGTH];
+  int df_par1[DF_LENGTH];
+  uint8_t df_par2[DF_LENGTH];
+  uint8_t df_par3[DF_LENGTH];
+
+  void SaveEvent(uint8_t event, int par1,uint8_t par2,uint8_t par3)
+  {
+    df_event[df_idx] = event;
+    df_par1[df_idx] = par1;
+    df_par2[df_idx] = par2;
+    df_par3[df_idx] = par3;
+    df_idx++;
+    df_idx &= (DF_LENGTH-1);
+  }
+
+  const char* eventStr[] = {
+  "EVENT_NONE",
+  "EVENT_RECMOVE",
+  "EVENT_DELAYED",
+  "EVENT_SEGADD",
+  "EVENT_EXEC",
+  "EVENT_END"
+  };
+
+  void PrintEventList()
+  {
+
+    int idx = df_idx;
+    int startIdx = df_idx;
+
+    do
+    {
+      idx--;
+      idx &= (DF_LENGTH-1);
+
+      const char* st = "UNKNOWN";
+
+      if(df_event[idx] < EVENT_NOOF)
+      {
+        st = eventStr[df_event[idx]];
+      }
+      printf("Event(%d) = %s, par1 = %d par2 = %d par3 = %d\n",idx,st, df_par1[idx],df_par2[idx],df_par3[idx]);
+
+    }
+    while(idx != startIdx);
+
+  }
+
+  #endif
+
 
 int CncAxeProcess_c::pos[NO_OF_AXES] = {0,0,0,0};
 int CncAxeProcess_c::actSeqNo = -1;
+int CncAxeProcess_c::procSeqNo = -1;
+int CncAxeProcess_c::recSeqNo = -1;
 
 bool CncAxeProcess_c::forceBreak = false;
 bool CncAxeProcess_c::ignoreLimiters = false;
@@ -254,7 +309,11 @@ void CncAxeProcess_c::main(void)
       case SIGNO_CNC_MOVE:
         {
           CNC_moveSig_c* sig_p = (CNC_moveSig_c*)recSig_p;
+          #if DEBUG_FLOW == 1
+          SaveEvent(EVENT_RECMOVE, sig_p->seqNo,0,0);
+          #endif
 
+          procSeqNo = sig_p->seqNo;
           ignoreLimiters = sig_p->ignoreLimiters;
           if(CncStatus_c::StatusOk() == true)
           {
@@ -492,6 +551,10 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
     while(segment_p == nullptr)
     {
       /*  delay */
+      #if DEBUG_FLOW == 1
+      int size = Segment_c::GetEmptyLength();
+      SaveEvent(EVENT_DELAYED, recSig_p->seqNo,size,0);
+      #endif
       vTaskDelay(10);
       segment_p = Segment_c::GetEmpty();
     }
@@ -512,8 +575,8 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
           {
             segment_p->endPos[i] = MoveProcessor_c::GetPosition(i);
           }
-
         }
+
         
       }
       break;
@@ -550,7 +613,7 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
         }
         else
         {
-          printf("segment ignored, seqNo=%d\n",recSig_p->seqNo);
+          //printf("segment ignored, seqNo=%d\n",recSig_p->seqNo);
         }
 
      
@@ -620,6 +683,11 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
 
     if((segResult != IGNORE_LAST_SEGMENT) && (segResult != IGNORE_SEGMENT)) 
     {
+      #if DEBUG_FLOW == 1
+      int esize = Segment_c::GetEmptyLength();
+      int fsize = Segment_c::GetLength();
+      SaveEvent(EVENT_SEGADD, recSig_p->seqNo,esize,fsize);
+      #endif
       segment_p->segmentNr = segmentCnt;
       segmentCnt++;
       segment_p->AddToList();
@@ -627,6 +695,10 @@ void CncAxeProcess_c::HandleMove(CNC_moveSig_c* recSig_p)
       {
         StartMoving();
       }
+    }
+    else
+    {
+      segment_p->AddToEmpty(); /* discard */
     }
 
 
@@ -1179,18 +1251,33 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
   {
     Segment_c* segPtr = Segment_c::GetFromListISR();
 
+    bool interruptError = false;
     for(int i=0;i<NO_OF_AXES;i++)
     {
       if(interruptCheck[i] == false)
       {
         printf("interruptCheck fail idx=%d\n",i);
+        interruptError = true;
       }
       interruptCheck[i] = false;
 
     }
 
+    if(interruptError == true && TEST_SEGLIST == 1)
+    {
+        Segment_c* prevSegPtr = axes_p->runData.actSegment_p;
+        printf("prevSeg: (%ld,%ld,%ld,%ld) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
+        
+    }
+
+
     if(segPtr != nullptr)
     { 
+      #if DEBUG_FLOW == 1
+      int esize = Segment_c::GetEmptyLengthISR();
+      int fsize = Segment_c::GetLengthISR();
+      SaveEvent(EVENT_EXEC, segPtr->seqNo,esize,fsize);
+      #endif
       //printf("Del: Vs=%.2f Ve=%.2f\n",axes_p->runData.actSegment_p->v0,axes_p->runData.actSegment_p->vE);
 
       //printf("next seg, act speed=%f, VE=%f, VS=%f\n",axes_p->runData.actSpeed,axes_p->runData.actSegment_p->vE,segPtr->v0);
@@ -1201,8 +1288,8 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
         printf("next seg error, act speed=%f, VE=%f, VS=%f\n",axes_p->runData.actSpeed,axes_p->runData.actSegment_p->vE,segPtr->v0);
 
         Segment_c* prevSegPtr = axes_p->runData.actSegment_p;
-        printf("prevSeg: (%l,%l,%l,%l) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
-        printf("prevSeg: (%l,%l,%l,%l) V0=%f VE=%f VM=%f\n",segPtr->pulses[0],segPtr->pulses[1],segPtr->pulses[2],segPtr->pulses[3],segPtr->v0,segPtr->vE,segPtr->vM);
+        printf("prevSeg: (%ld,%ld,%ld,%ld) V0=%f VE=%f VM=%f\n",prevSegPtr->pulses[0],prevSegPtr->pulses[1],prevSegPtr->pulses[2],prevSegPtr->pulses[3],prevSegPtr->v0,prevSegPtr->vE,prevSegPtr->vM);
+        printf("prevSeg: (%ld,%ld,%ld,%ld) V0=%f VE=%f VM=%f\n",segPtr->pulses[0],segPtr->pulses[1],segPtr->pulses[2],segPtr->pulses[3],segPtr->v0,segPtr->vE,segPtr->vM);
         //CncAxeProcess_c::PrintSpeedDebug();
       }
       #endif
@@ -1270,8 +1357,11 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
     {
       Axe_c::MasterStop();
       Axe_c::SpeedStop();
-
-
+      #if DEBUG_FLOW == 1
+      int esize = Segment_c::GetEmptyLengthISR();
+      int fsize = Segment_c::GetLengthISR();
+      SaveEvent(EVENT_END, segPtr->seqNo,esize,fsize);
+      #endif
 
       #if TEST_AXE == 1
       printf("SYNC = %d, AXES TIM = %d %d %d %d\n",
@@ -1291,6 +1381,9 @@ void SyncTimerCallback(struct __TIM_HandleTypeDef *htim)
 
       axes_p->runData.actSegment_p = nullptr;
       Axe_c::MasterSetSpeed(Axe_c::GetMinSpeed());
+      #if DEBUG_FLOW == 1
+      PrintEventList();
+      #endif
       CncAxeProcess_c::actSeqNo = -1;
     }
   }
