@@ -117,8 +117,12 @@ void MoveProcessor_c::InitLine(MoveProcData_st* runData_p, CNC_moveSig_c* moveSi
     float x = move[0];
     float y = move[1];
     float z = move[2];
+    x *= 0.001;
+    y *= 0.001;
+    z *= 0.001;
 
     float maxLen = runData_p->maxSegLen;
+    maxLen*= 0.001;
 
     float length = sqrtf(x*x + y*y + z+z);
     float lengthPlane = sqrtf(x*x + y*y);
@@ -511,6 +515,7 @@ SEGMENT_REULT_et MoveProcessor_c::GetLineSimpleMove(SimpleMove_st* sMove_p, Move
     endPos[2]);
 
     printf("offOld=%d, offNew = %d\n",addedOffset,zOffset);
+    
 
   #endif
 
@@ -537,7 +542,10 @@ SEGMENT_REULT_et MoveProcessor_c::GetLineSimpleMove(SimpleMove_st* sMove_p, Move
   
 
   #if TEST_SURFACE_OFFSET == 1
+  taskENTER_CRITICAL();
     printf("move = (%d,%d,%d)\n",sMove_p->x,sMove_p->y,sMove_p->z);
+    printf("startSpeed = %f, stopSpeed = %f, vMax = %f\n", sMove_p->startSpeed,sMove_p->endSpeed, runData_p->vMax);
+     taskEXIT_CRITICAL();
   #endif
 
  #if TEST_AXE_PIPELINE == 1

@@ -180,14 +180,14 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
 
     case OC_RUN_AUTOBASE :
       {
-        CNC_moveSig_c* sig_p = new CNC_moveSig_c;
-        CncAxeProcess_c::recSeqNo = sig_p->seqNo;
+
+        CNC_AutobaseSig_c* sig_p = new CNC_AutobaseSig_c;
+
         sig_p->x = frame_p->data[2];
         sig_p->y = frame_p->data[3];
         sig_p->z = frame_p->data[4];
         sig_p->a = frame_p->data[5];
 
-        sig_p->moveType = MOVE_AUTOBASE;
 
         sig_p->Send();
 
@@ -306,7 +306,7 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
         sig_p->spindleSpeed = frame_p->data[2];
         CncAxeProcess_c::recSeqNo = sig_p->seqNo;
 
-        sig_p->moveType = MOVE_SET_SPINDLE;
+        sig_p->moveType = MOVE_SPINDLE_SPEED;
 
         sig_p->Send();
 
@@ -354,6 +354,25 @@ uint16_t  CNC2_socket_c::ResponseMessage(CncFrame_st* frame_p,uint8_t oper)
       }
       return 4;
 
+    case OC_RUN_BULK:
+      {
+        int noOfMsgs = frame_p->data[0];
+        int lastRecvSigNo = -1;
+
+        for(int i=0;i<noOfMsgs; i++)
+        {
+          lastRecvSigNo = DecodeMsg(&(frame_p->data[1 + 20 * i]));
+
+
+        }
+        frame_p->data[0] = CncAxeProcess_c::actSeqNo;
+        frame_p->data[1] = lastRecvSigNo ;
+        frame_p->size = 3;
+
+
+      }
+      return 8;
+
     default:
       frame_p->size = 0;
       return 4;
@@ -395,6 +414,134 @@ void CNC2_socket_c::HandlePacket(uint8_t* packet_p,uint16_t packetSize)
   
 
  EthernetBuffers_c::DeleteBuffer(packet_p);
+
+}
+
+int CNC2_socket_c::DecodeMsg(int32_t* msg)
+{
+  CNC_moveSig_c* sig_p = new CNC_moveSig_c;
+  sig_p->seqNo = msg[1];
+  int recvSigno = msg[1];
+  CncAxeProcess_c::recSeqNo = recvSigno;
+  sig_p->moveType = (MOVE_TYPE_et)msg[0];
+  lastReceivedSeqNo = recvSigno;
+
+  switch(sig_p->moveType)
+  {
+
+    case MOVE_LINE:
+      {       
+
+        sig_p->speedStart = ((float)msg[2])/1000 ;
+        sig_p->speedEnd = ((float)msg[3])/1000 ;
+        sig_p->maxSpeed = ((float)msg[4])/1000 ;
+        sig_p->maxAcceleration = ((float)msg[5])/1000 ;
+      
+        sig_p->x = msg[6];
+        sig_p->y = msg[7];
+        sig_p->z = msg[8];
+        sig_p->a = msg[9];
+
+        sig_p->ignoreLimiters = (msg[10] != 0);        
+        #if TEST_AXE_PIPELINE == 1
+        printf("rec line, seq=%d\n",sig_p->seqNo);
+        #endif
+      }
+      break;  
+    case MOVE_ARC2:
+      {
+        sig_p->speedStart = ((float)msg[2])/1000 ;
+        sig_p->speedEnd = ((float)msg[3])/1000 ;
+        sig_p->maxSpeed = ((float)msg[4])/1000 ;
+        sig_p->maxAcceleration = ((float)msg[5])/1000 ;
+      
+        sig_p->x = msg[6];
+        sig_p->y = msg[7];
+        sig_p->z = msg[8];
+        sig_p->a = msg[9];
+
+        sig_p->cx = msg[10];
+        sig_p->cy = msg[11];
+        sig_p->cz = msg[12];
+
+        sig_p->rotVector.X = msg[13];
+        sig_p->rotVector.Y = msg[14];
+        sig_p->rotVector.Z = msg[15];
+
+        sig_p->turns = msg[16];
+        #if TEST_AXE_PIPELINE == 1
+        printf("rec arc2, seq=%d\n",sig_p->seqNo);
+        #endif
+      }
+      break;
+    case MOVE_DELAY:
+      {
+        sig_p->delay = msg[2];
+      }
+      break;
+
+    case MOVE_SPINDLE_SPEED:
+      {
+        sig_p->spindleSpeed = msg[2];
+      }
+      break;
+    case MOVE_PAUSE:
+    case MOVE_PAUSE_TOOL_CHANGE:
+    case MOVE_STOP:
+    {
+      delete sig_p;
+      sig_p = nullptr;
+    }
+    break;
+    case MOVE_PROBE:
+      {
+        sig_p->axe = msg[2];
+        sig_p->length = msg[3];
+        sig_p->mode = msg[4];
+        sig_p->maxSpeed = ((float)msg[5])/1000 ;
+        sig_p->maxAcceleration = ((float)msg[6])/1000 ;
+      }
+      break;
+    case MOVE_ERROR:
+    {
+      delete sig_p;
+      sig_p = nullptr;
+    }
+      break;
+
+    case MOVE_SUFRACE_OFFSET_INIT:
+    case MOVE_SUFRACE_OFFSET_SET:
+    case MOVE_SUFRACE_OFFSET_ACTIVATE:
+    case MOVE_SUFRACE_OFFSET_DEACTIVATE:
+    case MOVE_SUFRACE_OFFSET_CLEAR:
+      {
+        sig_p->x = msg[2];
+        sig_p->y = msg[3];
+        sig_p->xStep = msg[4];
+        sig_p->yStep = msg[5];
+        sig_p->xStart = msg[6];
+        sig_p->yStart = msg[7];
+        sig_p->val = msg[8];
+      }
+      break;
+
+
+    default:
+      delete sig_p;
+      sig_p = nullptr;
+      recvSigno = -1;
+
+  }
+
+  if(sig_p != nullptr)
+  {
+    sig_p->Send();
+  }
+
+  return recvSigno;
+
+
+
 
 }
 

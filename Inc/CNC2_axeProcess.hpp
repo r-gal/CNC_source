@@ -83,6 +83,8 @@ struct RunData_st
   float dV;
   float maxV;
 
+  bool nullDetected;
+
 };
 
 class CncStatus_c
@@ -193,6 +195,8 @@ class CncAxeProcess_c : public process_c
 
   void StartMoving(void);
  
+  void HandleAutobase(CNC_AutobaseSig_c* recSig_p);
+
   void HandleManualMove( CNC_ManualMove_c* recSig_p);
   static void FlushQueue(void);
 

@@ -23,7 +23,7 @@ enum CNC2_orderCode_et
   OC_RESET,
   OC_GETSTAT,
   OC_RUN_LINE,
-  OC_RUN_ARC,
+  OC_RUN_ARC, /* unused */
   OC_RUN_ARC2,
   OC_RUN_DELAY,
   OC_RUN_AUTOBASE,
@@ -40,7 +40,10 @@ enum CNC2_orderCode_et
   OC_MANUAL_MOVE_STOP,
   OC_RESULT_ACK,
   OC_SUFRACE_OFFSET,
+  OC_RUN_BULK
 };
+
+
 
 class CNC2_socket_c : public SocketUdp_c
 {
@@ -65,6 +68,8 @@ class CNC2_socket_c : public SocketUdp_c
   void HandlePacket(uint8_t* packet_p,uint16_t packetSize);
 
   CNC2_socket_c(void);
+
+  int DecodeMsg(int32_t* msg);
 
 
 };

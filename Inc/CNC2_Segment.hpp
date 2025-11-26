@@ -13,21 +13,36 @@
 
 #include "CNC2_dataDef.hpp"
 
-#define USE_SAVE_QUEUES 1
+#define QUEUE_TYPE 0
 
 class Segment_c
 {
 
   Segment_c* next;
 
-  #if USE_SAVE_QUEUES == 1 
+  #if QUEUE_TYPE == 1 
   static QueueHandle_t queue;
   static QueueHandle_t emptyQueue;
+  #elif QUEUE_TYPE == 2
+  static int first;
+  static int last;
+  static int firstFree;
+  static int lastFree;
+  static int length ;
+  static int emptyLength;
+  uint16_t idx;
+   
   #else
+  static uint32_t frontGuard;
   static Segment_c* first;
   static Segment_c* last;
   static Segment_c* emptyList;   
+  static uint32_t length ;
+  static uint32_t emptyLength;
+  static uint32_t backGuard;
   #endif
+
+  static void SanityCheck(void);
 
   public:
 

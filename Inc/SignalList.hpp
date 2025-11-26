@@ -47,6 +47,8 @@ class SignalList_c
     SINGO_CNC_RESET_ALL,
 
     SIGNO_CNC_SUFRACE_OFFSET,
+    SIGNO_CNC_MOVEAGAIN,
+    SIGNO_CNC_AUTOBASE
 
   };
 };
@@ -185,9 +187,17 @@ class CNC_moveSig_c : public Sig_c
 
   MOVE_TYPE_et moveType;
 
-  int x,y,z,a;
-  int cx,cy,cz;
+
+
+  int x,y;
   
+  union {int z; int xStep; };
+  union {int a; int yStep; };
+  union {int cx; int xStart; };
+  union {int cy; int yStart; };
+  union {int cz; int val; };
+
+
   Vector3D rotVector;
 
 
@@ -309,6 +319,26 @@ class CNC_SurfaceOffsetSig_c : public Sig_c
   int yStart;
   int val;  
 };
+
+class CNC_MoveAgainSig_c : public Sig_c
+{
+  public:
+  CNC_MoveAgainSig_c(void) : Sig_c(SIGNO_CNC_MOVEAGAIN,HANDLE_AXE) {}
+  
+};
+
+class CNC_AutobaseSig_c : public Sig_c
+{
+  public:
+  CNC_AutobaseSig_c(void) : Sig_c(SIGNO_CNC_AUTOBASE,HANDLE_AXE) {}
+
+  int x,y,z,a;
+  
+};
+
+
+
+
 
 
 
