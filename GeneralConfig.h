@@ -72,6 +72,7 @@
 #define TEST_SYNC_TIMER 0 /* assume that sync timer is TIM23 */
 #define TEST_SEGLIST 0
 #define DEBUG_FLOW  0
+#define DEBUG_AXEPHY 0
 #define TEST_AXE 0
 #define TEST_AXE_PIPELINE 0
 #define TEST_AXE_SPEED 0

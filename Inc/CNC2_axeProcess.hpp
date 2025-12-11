@@ -85,6 +85,13 @@ struct RunData_st
 
   bool nullDetected;
 
+  bool intInProgress[AXE_NOOF];
+
+  uint32_t lastPeriod[AXE_NOOF];
+  uint32_t lastArr[AXE_NOOF];
+
+  uint32_t setSegNr[AXE_NOOF];
+
 };
 
 class CncStatus_c
@@ -218,10 +225,6 @@ class CncAxeProcess_c : public process_c
 
   static void CheckLimiters( bool fromISR);
   static void CheckEmergencyStop(void);
-
-  static void DebugSpeed(float speed, int event);
-
-  static void PrintSpeedDebug(void);
 
   static void CriticalChecksTick(void);
 

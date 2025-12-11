@@ -38,7 +38,7 @@ uint32_t Segment_c::backGuard = 0xDEADBEEF;
 
 void Segment_c::SanityCheck(void)
 {
-/*  uint8_t errorMask = 0;
+  uint8_t errorMask = 0;
   if(frontGuard != 0xDEADBEEF)
   {
     errorMask |= 0x01;
@@ -47,12 +47,12 @@ void Segment_c::SanityCheck(void)
   {
     errorMask |= 0x02;
   }
- 
+ /*
   Segment_c* seg_p = first;
   int cnt1 = 0;
   int prevNr = -1;
-*/
-/*
+
+
 
   while(seg_p != nullptr)
   {
@@ -89,12 +89,12 @@ void Segment_c::SanityCheck(void)
     errorMask |= 0x20;
   }
 */
-/*
+
   if(errorMask != 0)
   {
     printf("sanity fail %x\n",errorMask );
 
-  }*/
+  }
   
 
 }
@@ -306,8 +306,9 @@ Segment_c* Segment_c::GetEmpty(void)
       emptyList = retPtr->next;
     }
     retPtr->next = nullptr;
+    emptyLength--;
   }
-  emptyLength--;
+  
   taskEXIT_CRITICAL();
   #endif
   return retPtr;
@@ -485,8 +486,9 @@ Segment_c* Segment_c::GetFromList(void)
       first = retPtr->next;
     }
     retPtr->next = nullptr;
+    length--;
   }
-  length--;
+  
   taskEXIT_CRITICAL();
   #endif
    //printf("get seg %d\n",retPtr->segmentNr);
@@ -557,8 +559,9 @@ Segment_c* Segment_c::GetFromListISR(void)
       first = retPtr->next;
     }
     retPtr->next = nullptr;
+    length--;
   }
-  length--;
+  
   #endif
   //printf("get seg ISR %d\n",retPtr->segmentNr);
   return retPtr;

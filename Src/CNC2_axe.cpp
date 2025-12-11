@@ -175,9 +175,7 @@ void Axe_c::SetDir(DIR_et dir)
   }
   else
   {
-    //TIM_CCxChannelCmd(TimInstance[idx],TimChannel[idx],TIM_CCx_ENABLE);
-    //uint16_t ccr = htim.Instance->ARR /2;
-    //TimInstance[idx]->CCR1 = ccr;
+
     
     if((dir == DIR_UP) ^ axeDir)
     {
@@ -196,20 +194,15 @@ void Axe_c::SetState(DIR_et dir, uint32_t period)
 {
   if(dir == DIR_NONE)
   {
-    //TIM_CCxChannelCmd(TimInstance[idx],TimChannel[idx],TIM_CCx_DISABLE);
-
     TimInstance[idx]->Instance->CCR1 = 0xFFFF;
 
   }
   else
   {
-    //TIM_CCxChannelCmd(TimInstance[idx],TimChannel[idx],TIM_CCx_ENABLE);
     uint16_t ccr =  period /2;
     TimInstance[idx]->Instance->CCR1 = ccr;
     
   }
-  //actDir = dir;
-
 }
 
 DIR_et Axe_c::GetActDir(void)
@@ -229,16 +222,15 @@ void Axe_c::Run(void)
 void Axe_c::SetPeriod(uint16_t period, uint16_t prescaler, bool force)
 {
   TIM_HandleTypeDef* htim_p = GetHtim();
-  //htim.Instance->CNT = 0;
   if(period > 0)
   {
     period--;
   }
   htim_p->Instance->PSC = prescaler;
+
   htim_p->Instance->ARR = period;
   if(actDir != DIR_NONE)
   {
-    //uint16_t ccr = htim_p->Instance->ARR - 10;
     uint16_t ccr = htim_p->Instance->ARR/2;
     TimInstance[idx]->Instance->CCR1 = ccr;
   }
@@ -310,6 +302,9 @@ void Axe_c::SyncRun(uint32_t period)
 {
   SYNC_TIMER.Instance->CNT = 0;
   SYNC_TIMER.Instance->ARR = period-1;
+
+  SYNC_TIMER.Instance->EGR = 1; /* UG generation */
+
   __HAL_TIM_CLEAR_IT(&SYNC_TIMER, TIM_IT_UPDATE);
   //HAL_TIM_Base_Start(&SYNC_TIMER);
 
@@ -407,8 +402,6 @@ void Axe_c::InitSpindlePhy(void)
  void Axe_c::SetProbeConfig(int mode)
  {
    probeMode = mode;
-
-
  }
 
  void Axe_c::MasterTimInit(void)
@@ -427,67 +420,3 @@ void Axe_c::InitSpindlePhy(void)
  {
    TimInstance[idx]->OC_DelayElapsedCallback = AxeSoftPosCallback;
  }
-
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-
-//void TIM23_IRQHandler(void)
-//{
-// // printf("S");
-//   __HAL_TIM_CLEAR_IT(&SYNC_TIMER, TIM_IT_UPDATE);
-//    SyncTimerCallback(&SYNC_TIMER);
-// //   printf("s");
-//}
-
-
-//void TIM16_IRQHandler(void)
-//{
-//  //printf("F");
-//  //  __HAL_TIM_CLEAR_IT(&Axe_c::htimSpeed, TIM_IT_UPDATE);
-// // SpeedTimerCallback(&Axe_c::htimSpeed);
-//   // printf("f");
-//}
-
-
-//void TIM2_IRQHandler(void)
-//{
-// // printf("X");
-//  TIM2->SR =  ~(TIM_IT_CC2);
-//  AxeSoftPosCallback(0);
-// //   printf("x");
-//}
-
-
-//void TIM5_IRQHandler(void)
-//{
-// // printf("Y");
-//  TIM5->SR =  ~(TIM_IT_CC2);
-//  AxeSoftPosCallback(1);
-// //   printf("y");
-//}
-
-
-//void TIM15_IRQHandler(void)
-//{
-// // printf("Z");
-//  TIM15->SR =  ~(TIM_IT_CC2);
-//  AxeSoftPosCallback(2);
-// //   printf("z");
-//}
-
-//void TIM24_IRQHandler(void)
-//{
-// // printf("A");
-//  TIM24->SR =  ~(TIM_IT_CC2);
-//  AxeSoftPosCallback(3);
-//   // printf("a");
-//}
-
-
-
-
-#ifdef __cplusplus
-}
-#endif
